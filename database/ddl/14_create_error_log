@@ -1,0 +1,95 @@
+/******************************************************************************
+ * File Name   : 14_create_error_log.sql
+ * Description : Stores ETL and application errors.
+ ******************************************************************************/
+
+CREATE TABLE ERROR_LOG
+(
+    --------------------------------------------------------------------------
+    -- Primary Key
+    --------------------------------------------------------------------------
+    ERROR_LOG_ID                NUMBER(10)                  NOT NULL,
+
+    --------------------------------------------------------------------------
+    -- Foreign Key
+    --------------------------------------------------------------------------
+    ETL_JOB_ID                  NUMBER(10),
+
+    --------------------------------------------------------------------------
+    -- Error Information
+    --------------------------------------------------------------------------
+    TABLE_NAME                  VARCHAR2(50),
+
+    RECORD_IDENTIFIER           VARCHAR2(200),
+
+    ERROR_CODE                  NUMBER(10),
+
+    ERROR_MESSAGE               VARCHAR2(4000)              NOT NULL,
+
+    ERROR_STACK                 CLOB,
+
+    LOGGED_AT                   TIMESTAMP
+                                 DEFAULT SYSTIMESTAMP
+                                 NOT NULL,
+
+    STATUS                      VARCHAR2(20)
+                                 DEFAULT 'OPEN'
+                                 NOT NULL,
+
+    --------------------------------------------------------------------------
+    -- Audit Columns
+    --------------------------------------------------------------------------
+    CREATED_BY                  VARCHAR2(50)
+                                 DEFAULT USER
+                                 NOT NULL,
+
+    CREATED_DATE                TIMESTAMP
+                                 DEFAULT SYSTIMESTAMP
+                                 NOT NULL,
+
+    UPDATED_BY                  VARCHAR2(50),
+
+    UPDATED_DATE                TIMESTAMP,
+
+    --------------------------------------------------------------------------
+    -- Constraints
+    --------------------------------------------------------------------------
+    CONSTRAINT PK_ERROR_LOG
+        PRIMARY KEY (ERROR_LOG_ID),
+
+    CONSTRAINT FK_ERROR_LOG_JOB
+        FOREIGN KEY (ETL_JOB_ID)
+        REFERENCES ETL_JOB (ETL_JOB_ID),
+
+    CONSTRAINT CHK_ERROR_LOG_STATUS
+        CHECK
+        (
+            STATUS IN
+            (
+                'OPEN',
+                'RESOLVED',
+                'IGNORED'
+            )
+        )
+);
+
+COMMENT ON TABLE ERROR_LOG IS
+'Stores ETL and application error details.';
+
+COMMENT ON COLUMN ERROR_LOG.ETL_JOB_ID IS
+'Reference to the ETL job during which the error occurred.';
+
+COMMENT ON COLUMN ERROR_LOG.TABLE_NAME IS
+'Table where the error occurred.';
+
+COMMENT ON COLUMN ERROR_LOG.RECORD_IDENTIFIER IS
+'Business key or record identifier associated with the error.';
+
+COMMENT ON COLUMN ERROR_LOG.ERROR_CODE IS
+'Oracle SQLCODE or application error code.';
+
+COMMENT ON COLUMN ERROR_LOG.ERROR_MESSAGE IS
+'Detailed error message.';
+
+COMMENT ON COLUMN ERROR_LOG.ERROR_STACK IS
+'Complete PL/SQL error stack.';
